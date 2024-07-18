@@ -1517,7 +1517,8 @@ namespace TagTool.Commands.Porting
 
             foreach (var effectEvent in effe.Events)
             {
-                if (BlamCache.Platform == CachePlatform.MCC)
+                if (effectEvent.Parts.Any(p => p.Flags.HasFlag(EffectEventPartFlags.MakeEveryTick)) 
+                    && BlamCache.Platform == CachePlatform.MCC)
                 {
                     effectEvent.DurationBounds.Lower *= 2;
                     effectEvent.DurationBounds.Upper *= 2;
@@ -1718,6 +1719,10 @@ namespace TagTool.Commands.Porting
 
                 case ObjectTypeFlags objectTypeFlags:
 					return ConvertObjectTypeFlags(objectTypeFlags);
+
+                case VersionedFlags versionedFlags:
+                    versionedFlags.ConvertFlags(BlamCache.Version, BlamCache.Platform, CacheContext.Version, CacheContext.Platform);
+                    return versionedFlags;
 
                 case GameObject.MultiplayerObjectBlock multiplayer when BlamCache.Version >= CacheVersion.HaloReach:
                     {
@@ -2136,6 +2141,16 @@ namespace TagTool.Commands.Porting
 
             if (CacheVersionDetection.IsInGen(CacheGeneration.HaloOnline, BlamCache.Version))
                 return weaponFlags;
+
+            if(BlamCache.Platform == CachePlatform.MCC)
+            {
+                weaponFlags.NewFlagsMCC &= ~WeaponFlags.NewWeaponFlagsMCC.WeaponUsesOldDualFireErrorCode;
+
+                if (!Enum.TryParse(weaponFlags.NewFlagsMCC.ToString(), out weaponFlags.NewFlags))
+                    throw new FormatException(BlamCache.Version.ToString());
+
+                return weaponFlags;
+            }
 
             if (weaponFlags.OldFlags.HasFlag(WeaponFlags.OldWeaponFlags.WeaponUsesOldDualFireErrorCode))
 				weaponFlags.OldFlags &= ~WeaponFlags.OldWeaponFlags.WeaponUsesOldDualFireErrorCode;

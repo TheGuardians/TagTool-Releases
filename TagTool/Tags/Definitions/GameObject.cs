@@ -8,8 +8,7 @@ using TagTool.Tags.Definitions.Common;
 namespace TagTool.Tags.Definitions
 {
     [TagStructure(Name = "object", Tag = "obje", Size = 0xF8, MaxVersion = CacheVersion.Halo3Retail)]
-    [TagStructure(Name = "object", Tag = "obje", Size = 0x104, Version = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
-    [TagStructure(Name = "object", Tag = "obje", Size = 0x114, Version = CacheVersion.Halo3ODST, Platform = CachePlatform.MCC)]
+    [TagStructure(Name = "object", Tag = "obje", Size = 0x104, Version = CacheVersion.Halo3ODST)]
     [TagStructure(Name = "object", Tag = "obje", Size = 0x120, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
     [TagStructure(Name = "object", Tag = "obje", Size = 0x178, MinVersion = CacheVersion.HaloReach)]
     public class GameObject : TagStructure
@@ -19,10 +18,6 @@ namespace TagTool.Tags.Definitions
         [TagField(Flags = Padding, Length = 2, MinVersion = CacheVersion.HaloReach)]
         public byte[] pad = new byte[2];
 
-        [TagField(MinVersion = CacheVersion.HaloReach)]
-        public GameObjectFlagsReach ReachObjectFlags;
-
-        [TagField(MaxVersion = CacheVersion.HaloOnline700123)]
         public ObjectDefinitionFlags ObjectFlags;
 
         public float BoundingRadius; // world units
@@ -99,7 +94,7 @@ namespace TagTool.Tags.Definitions
 
         public List<ChangeColor> ChangeColors;
 
-        [TagField(Gen = CacheGeneration.Third)]
+        [TagField(Gen = CacheGeneration.Third, Platform = CachePlatform.Original)]
         public List<PredictedResource> PredictedResources;
 
         [TagField(MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
@@ -112,6 +107,7 @@ namespace TagTool.Tags.Definitions
         public CachedTag SimulationInterpolation;
 
         [TagField(MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagField(Platform = CachePlatform.MCC)]
         public List<TagReferenceBlock> RevivingEquipment;
 
         [TagField(MinVersion = CacheVersion.HaloReach)]
@@ -186,15 +182,16 @@ namespace TagTool.Tags.Definitions
             public RealEulerAngles3d Angles;
         }
 
-        [TagStructure(Size = 0x10, MaxVersion = CacheVersion.Halo3Retail)]
-        [TagStructure(Size = 0xC, MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123)]
-        [TagStructure(Size = 0x10, MinVersion = CacheVersion.HaloReach)]
+        [TagStructure(Size = 0x10, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0xC, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+        [TagStructure(Size = 0xC, MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x10, MinVersion = CacheVersion.HaloReach, Platform = CachePlatform.Original)]
         public class AiProperty : TagStructure
 		{
             public AiPropertiesFlags AiFlags;
             public StringId AiTypeName;
 
-            [TagField(Length = 0x4, Flags = Padding, MaxVersion = CacheVersion.Halo3Retail)]
+            [TagField(Length = 0x4, Flags = Padding, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
             public byte[] Padding0;
 
             [TagField(MinVersion = CacheVersion.HaloReach)]
@@ -331,10 +328,11 @@ namespace TagTool.Tags.Definitions
                 public StringId VariantName; // if empty, may be used by any model variant
             }
 
-            [TagStructure(Size = 0x28)]
+            [TagStructure(Size = 0x28, Platform = CachePlatform.Original)]
+            [TagStructure(Size = 0x24, Platform = CachePlatform.MCC)]
             public class ChangeColorFunction : TagStructure
-			{
-                [TagField(Flags = TagFieldFlags.Padding, Length = 4)]
+            {
+                [TagField(Flags = TagFieldFlags.Padding, Length = 4, Platform = CachePlatform.Original)]
                 public byte[] Unused = new byte[4];
                 public GlobalRgbInterpolationFlags ScaleFlags;
                 public RealRgbColor ColorLowerBound;
@@ -879,8 +877,45 @@ namespace TagTool.Tags.Definitions
         DamageNotBlockedByObstructions = 1 << 15
     }
 
+    [TagStructure(Size = 0x2, MaxVersion = CacheVersion.HaloOnline700123)]
+    [TagStructure(Size = 0x4, MinVersion = CacheVersion.HaloReach)]
+    public class ObjectDefinitionFlags : VersionedFlags
+    {
+        [TagField(MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        public ObjectFlags Flags;
+
+        [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+        public ObjectFlagsMCC FlagsMCC;
+
+        [TagField(MinVersion = CacheVersion.HaloReach)]
+        public GameObjectFlagsReach FlagsReach;
+    }
+
     [Flags]
-    public enum ObjectDefinitionFlags : ushort
+    public enum ObjectFlagsMCC : ushort
+    {
+        DoesNotCastShadow = 1 << 0,
+        SearchCardinalDirectionLightmapsOnFailure = 1 << 1,
+        PreservesInitialDamageOwner = 1 << 2,
+        NotAPathfindingObstacle = 1 << 3,
+        // object passes all function values to parent and uses parent's markers
+        ExtensionOfParent = 1 << 4,
+        DoesNotCauseCollisionDamage = 1 << 5,
+        EarlyMover = 1 << 6,
+        EarlyMoverLocalizedPhysics = 1 << 7,
+        ObjectScalesAttachments = 1 << 8,
+        NonPhysicalInMapEditor = 1 << 9,
+        // use this for the mac gun on spacestation
+        AttachToClustersByDynamicSphere = 1 << 10,
+        EffectsCreatedByThisObjectDoNotSpawnObjectsInMultiplayer = 1 << 11,
+        // specificly the flying observer camera
+        DoesNotCollideWithCamera = 1 << 12,
+        // AOE damage being applied to this object does not test for obstrutions.
+        DamageNotBlockedByObstructions = 1 << 13
+    }
+
+    [Flags]
+    public enum ObjectFlags : ushort
     {
         None = 0,
         DoesNotCastShadow = 1 << 0,

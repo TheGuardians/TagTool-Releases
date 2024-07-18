@@ -6,12 +6,12 @@ namespace TagTool.Audio
 {
     public class FMODSoundCache
     {
-        public DirectoryInfo Directory;
+        public List<DirectoryInfo> Directories;
         public List<FMODSoundBank> LoadedBanks;
 
-        public FMODSoundCache(DirectoryInfo directory)
+        public FMODSoundCache(List<DirectoryInfo> directories)
         {
-            Directory = directory;
+            Directories = directories;
             LoadedBanks = new List<FMODSoundBank>();
 
             LoadBanks();
@@ -19,14 +19,19 @@ namespace TagTool.Audio
 
         private void LoadBanks()
         {
-            LoadBank("sfx.fsb");
-            LoadBank("english.fsb");
+            foreach(var directory in Directories)
+            {
+                foreach (var file in directory.EnumerateFiles())
+                {
+                    if (file.Extension == ".fsb")
+                        LoadBank(file);
+                }
+            }
         }
 
-        private void LoadBank(string name)
+        private void LoadBank(FileInfo file)
         {
-            var bankFile = new FileInfo(Path.Combine(Directory.FullName, name));
-            LoadedBanks.Add(new FMODSoundBank(FMODTagTool.System, bankFile));
+            LoadedBanks.Add(new FMODSoundBank(FMODTagTool.System, file));
         }
 
         public int FindSound(uint hash, out FMODSoundBank outBank)

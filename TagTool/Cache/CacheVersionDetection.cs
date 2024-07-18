@@ -632,6 +632,7 @@ namespace TagTool.Cache
             -1, // Halo Xbox
             -1, // Halo PC
             -1, // Halo Custom Edition
+            -1, // Halo2Alpha,
             -1, // Halo2Beta
             -1, // Halo2Xbox
             -1, // Halo2Vista

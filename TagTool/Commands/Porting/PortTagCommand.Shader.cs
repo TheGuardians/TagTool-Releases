@@ -88,6 +88,7 @@ namespace TagTool.Commands.Porting
                 if (FlagIsSet(PortingFlags.Print))
                     Console.WriteLine($"['{deferredRm.Key.Group.Tag}', 0x{deferredRm.Key.Index:X4}] {deferredRm.Key.Name}.{(deferredRm.Key.Group as Cache.Gen3.TagGroupGen3).Name}");
             }
+            DeferredRenderMethods.Clear();
         }
 
         private object ConvertShader(Stream cacheStream, Stream blamCacheStream, object definition, CachedTag blamTag, object blamDefinition, CachedTag edTag, out bool isDeferred)

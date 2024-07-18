@@ -5,12 +5,14 @@ using System.Collections.Generic;
 
 namespace TagTool.Tags.Definitions
 {
-    [TagStructure(Name = "item", Tag = "item", Size = 0xB4, MinVersion = CacheVersion.Halo3Retail, MaxVersion = CacheVersion.HaloOnline700123)]
+    [TagStructure(Name = "item", Tag = "item", Size = 0xB4, MinVersion = CacheVersion.Halo3Retail, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+    [TagStructure(Name = "item", Tag = "item", Size = 0x94, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
     [TagStructure(Name = "item", Tag = "item", Size = 0xBC, MinVersion = CacheVersion.HaloReach)]
     public class Item : GameObject
     {
-        public ItemFlagBits ItemFlags;
+        public ItemDefinitionFlags ItemFlags;
 
+        [TagField(Platform = CachePlatform.Original)]
         public ObsoleteItemFieldStruct ObsoleteItemFields;
 
         public StringId PickupMessage;
@@ -24,9 +26,17 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public StringId NotifyOverheatedMessage;
 
-        [TagField(ValidTags = new[] { "snd!", "scmb" })]
+        [TagField(ValidTags = new[] { "snd!", "scmb" }, Platform = CachePlatform.Original)]
         public CachedTag CollisionSound;
+        [TagField(Platform = CachePlatform.Original)]
         public List<TagReferenceBlock> PredictedBitmaps;
+
+        // private use character for the item's icon
+        [TagField(Platform = CachePlatform.MCC)]
+        public int PrivateUseFontIcon;
+        // private use character for the item's left-hand icon
+        [TagField(Platform = CachePlatform.MCC)]
+        public int PrivateUseFontIcondual;
 
         [TagField(ValidTags = new[] { "jpt!" })]
         public CachedTag DetonationDamageEffect;
@@ -49,6 +59,23 @@ namespace TagTool.Tags.Definitions
         [TagField(ValidTags = new[] { "grfr" }, MinVersion = CacheVersion.HaloReach)]
         public CachedTag GroundedFrictionSettings;
 
+        [TagStructure(Size = 0x4)]
+        public class ItemDefinitionFlags : VersionedFlags
+        {
+            [TagField(Platform = CachePlatform.Original)]
+            public ItemFlagBits Flags;
+
+            [TagField(Platform = CachePlatform.MCC)]
+            public ItemFlagBitsMCC FlagsMCC;
+        }
+
+        [Flags]
+        public enum ItemFlagBitsMCC : uint
+        {
+            None,
+            AlwaysMaintainsZUp = 1 << 0,
+            CrateStyleCollisionFilter = 1 << 1,
+        }
 
         [Flags]
         public enum ItemFlagBits : uint

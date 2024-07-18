@@ -7,11 +7,12 @@ using System;
 using System.Collections.Generic;
 using static TagTool.Tags.TagFieldFlags;
 using static TagTool.Tags.Definitions.Gen4.Scenario;
+using static TagTool.Tags.Definitions.Item;
 
 namespace TagTool.Tags.Definitions
 {
     [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x7B8, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
-    [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x778, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+    [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x780, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
     [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x834, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
     [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x800, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.MCC)]
     [TagStructure(Name = "scenario", Tag = "scnr", Size = 0x824, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline449175)]
@@ -111,6 +112,8 @@ namespace TagTool.Tags.Definitions
         public byte[] EditorScenarioData;
 
         public List<Comment> Comments;
+        [TagField(Platform = CachePlatform.MCC)]
+        public List<NullBlock> UnknownMCC;
         public List<UnusedScenarioEnvironmentObject> ScenarioEnvironmentObjects;
         public List<ObjectName> ObjectNames;
         public List<SceneryInstance> Scenery;
@@ -339,7 +342,7 @@ namespace TagTool.Tags.Definitions
 
         public List<EditorFolder> EditorFolders;
 
-        [TagField(ValidTags = new[] { "unic" })]
+        [TagField(ValidTags = new[] { "unic" }, Platform = CachePlatform.Original)]
         public CachedTag TerritoryLocationNameStrings;
 
         [TagField(Length = 0x8, Flags = Padding, Platform = CachePlatform.Original)]
@@ -383,6 +386,8 @@ namespace TagTool.Tags.Definitions
 
         [TagField(ValidTags = new[] { "chmt" })]
         public CachedTag GlobalLighting;
+        [TagField(Platform = CachePlatform.MCC)]
+        public List<NullBlock> ChocolateMountains;
         [TagField(ValidTags = new[] { "sLdT" })]
         public CachedTag Lightmap;
         [TagField(ValidTags = new[] { "perf" })]
@@ -999,7 +1004,8 @@ namespace TagTool.Tags.Definitions
             Bit31 = 1 << 31
         }
 
-        [TagStructure(Size = 0x24, MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagStructure(Size = 0x24, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x28, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
         [TagStructure(Size = 0x13C, MinVersion = CacheVersion.HaloReach)]
         public class ZoneSet : TagStructure
 		{
@@ -1023,6 +1029,11 @@ namespace TagTool.Tags.Definitions
             public ZoneFlags CinematicZones;
             public int HintPreviousZoneSet;
             public int AudibilityIndex;
+
+            [TagField(Platform = CachePlatform.MCC)]
+            public short ChocalateMountainOverride;
+            [TagField(Length = 2, Flags = TagFieldFlags.Padding, Platform = CachePlatform.MCC)]
+            public byte[] PadMCC;
 
             [TagField(MinVersion = CacheVersion.HaloReach)]
             public List<PlanarFogZoneSetVisibilityBlock> PlanarFogVisibility;
@@ -1209,25 +1220,48 @@ namespace TagTool.Tags.Definitions
             public short PlacementIndex;
         }
 
-        [Flags]
-        public enum ObjectPlacementFlags : int
+        [TagStructure(Size = 0x4)]
+        public class ObjectPlacementFlags : VersionedFlags
         {
-            None = 0,
-            NotAutomatically = 1 << 0,
-            NotOnEasy = 1 << 1,
-            NotOnNormal = 1 << 2,
-            NotOnHard = 1 << 3,
-            LockTypeToEnvObject = 1 << 4,
-            LockTransformToEnvObject = 1 << 5,
-            NeverPlaced = 1 << 6,
-            LockNameToEnvObject = 1 << 7,
-            CreateAtRest = 1 << 8,
-            StoreOrientations = 1 << 9,
-            Startup = 1 << 10,
-            AttachPhysically = 1 << 11,
-            AttachWithScale = 1 << 12,
-            NoParentLighting = 1 << 13
-        }
+            [TagField(Platform = CachePlatform.Original)]
+            public ObjectLocationPlacementFlags Flags;
+
+            [TagField(Platform = CachePlatform.MCC)]
+            public ObjectLocationPlacementFlagsMCC FlagsMCC;
+
+            [Flags]
+            public enum ObjectLocationPlacementFlags : int
+            {
+                None = 0,
+                NotAutomatically = 1 << 0,
+                NotOnEasy = 1 << 1,
+                NotOnNormal = 1 << 2,
+                NotOnHard = 1 << 3,
+                LockTypeToEnvObject = 1 << 4,
+                LockTransformToEnvObject = 1 << 5,
+                NeverPlaced = 1 << 6,
+                LockNameToEnvObject = 1 << 7,
+                CreateAtRest = 1 << 8,
+                StoreOrientations = 1 << 9,
+                Startup = 1 << 10,
+                AttachPhysically = 1 << 11,
+                AttachWithScale = 1 << 12,
+                NoParentLighting = 1 << 13
+            }
+
+            public enum ObjectLocationPlacementFlagsMCC : uint
+            {
+                NotAutomatically = 1 << 0,
+                LockTypeToEnvObject = 1 << 1,
+                LockTransformToEnvObject = 1 << 2,
+                NeverPlaced = 1 << 3,
+                LockNameToEnvObject = 1 << 4,
+                CreateAtRest = 1 << 5,
+                StoreOrientations = 1 << 6,
+                PvsBound = 1 << 7,
+                Startup = 1 << 8
+            }
+        }      
 
         [TagStructure(Size = 0x1C)]
         public class ObjectNodeOrientation : TagStructure
@@ -1412,7 +1446,7 @@ namespace TagTool.Tags.Definitions
         public class PermutationInstance : ScenarioInstance
         {
             public StringId Variant;
-            public ScenarioObjectActiveChangeColorFlags ActiveChangeColors;
+            public ActiveChangeColorFlags ActiveChangeColors;
             public ArgbColor PrimaryColor;
             public ArgbColor SecondaryColor;
             public ArgbColor TertiaryColor;
@@ -1420,24 +1454,25 @@ namespace TagTool.Tags.Definitions
 
             [TagField(MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
             public ArgbColor QuinaryColor;
-
-            [Flags]
-            public enum ScenarioObjectActiveChangeColorFlags : uint
-            {
-                Primary = 1 << 0,
-                Secondary = 1 << 1,
-                Tertiary = 1 << 2,
-                Quaternary = 1 << 3
-            }
         }
 
-        [TagStructure(Size = 0x30, MaxVersion = CacheVersion.HaloOnline700123)]
-        [TagStructure(Size = 0x10, MinVersion = CacheVersion.HaloReach)]
+        [Flags]
+        public enum ActiveChangeColorFlags : uint
+        {
+            Primary = 1 << 0,
+            Secondary = 1 << 1,
+            Tertiary = 1 << 2,
+            Quaternary = 1 << 3
+        }
+
+        [TagStructure(Size = 0x30, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x10, MinVersion = CacheVersion.HaloReach, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x10, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
         public class ScenarioPaletteEntry : TagStructure
 		{
             public CachedTag Object;
 
-            [TagField(MaxVersion = CacheVersion.HaloOnline700123, Length = 0x20, Flags = TagFieldFlags.Padding)]
+            [TagField(MaxVersion = CacheVersion.HaloOnline700123, Length = 0x20, Flags = TagFieldFlags.Padding, Platform = CachePlatform.Original)]
             public byte[] Padding;
         }
 
@@ -1594,36 +1629,33 @@ namespace TagTool.Tags.Definitions
             Bit15 = 1 << 15
         }
 
-        [TagStructure(Size = 0x1C, MaxVersion = CacheVersion.Halo3Retail)]
-        [TagStructure(Size = 0x34, MaxVersion = CacheVersion.Halo3ODST)]
-        [TagStructure(Size = 0x38, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
-        [TagStructure(Size = 0x8C, MinVersion = CacheVersion.HaloReach)]
+        [TagStructure(Size = 0x1C, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x34, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+        [TagStructure(Size = 0x34, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x38, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x8C, MinVersion = CacheVersion.HaloReach, Platform = CachePlatform.Original)]
         public class MachineInstance : ScenarioInstance
         {
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public StringId Variant;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public ScenarioObjectActiveChangeColorFlags ActiveChangeColors;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+            public ActiveChangeColorFlags ActiveChangeColors;
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor PrimaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor SecondaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor TertiaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor QuaternaryColor;
-
             [TagField(MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
             public ArgbColor QuinaryColor;
-
-            [Flags]
-            public enum ScenarioObjectActiveChangeColorFlags : uint
-            {
-                Primary = 1 << 0,
-                Secondary = 1 << 1,
-                Tertiary = 1 << 2,
-                Quaternary = 1 << 3
-            }
 
             public short PowerGroup;
             public short PositionGroup;
@@ -1650,7 +1682,7 @@ namespace TagTool.Tags.Definitions
                 DoesNotCloseAutomatically = 1 << 5,
                 IgnoresPlayer = 1 << 6,
                 IgnoresAi = 1 << 7,
-                Bit8 = 1 << 8,
+                NeverClosesOnPlayer = 1 << 8,
                 Bit9 = 1 << 9,
                 Bit10 = 1 << 10,
                 Bit11 = 1 << 11,
@@ -1683,26 +1715,26 @@ namespace TagTool.Tags.Definitions
         [TagStructure(Size = 0x24, MinVersion = CacheVersion.HaloReach)]
         public class TerminalInstance : ScenarioInstance
         {
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public StringId Variant;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public byte ActiveChangeColors;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown7;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown8;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown9;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+            public ActiveChangeColorFlags ActiveChangeColors;
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor PrimaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor SecondaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor TertiaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             public ArgbColor QuaternaryColor;
             [TagField(MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
-            public uint Unknown10;
+            public ArgbColor QuinaryColor;
 
             public short PowerGroup;
             public short PositionGroup;
@@ -1724,38 +1756,41 @@ namespace TagTool.Tags.Definitions
             public short HoldScriptIndex;
         }
 
-        [TagStructure(Size = 0x10, MaxVersion = CacheVersion.Halo3Retail)]
-        [TagStructure(Size = 0x28, MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.Halo3ODST)]
+        [TagStructure(Size = 0x10, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x24, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+        [TagStructure(Size = 0x28, MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
         [TagStructure(Size = 0x2C, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
         [TagStructure(Size = 0x84, MinVersion = CacheVersion.HaloReach)]
         public class ControlInstance : ScenarioInstance
         {
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
             public StringId Variant;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public byte ActiveChangeColors;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown7;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown8;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
-            public sbyte Unknown9;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
+            public ActiveChangeColorFlags ActiveChangeColors;
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
             public ArgbColor PrimaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
             public ArgbColor SecondaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
             public ArgbColor TertiaryColor;
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
+            [TagField(Platform = CachePlatform.MCC)]
             public ArgbColor QuaternaryColor;
             [TagField(MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
-            public uint Unknown10;
+            public ArgbColor QuinaryColor;
 
             public short PowerGroup;
             public short PositionGroup;
             public ScenarioDeviceFlags DeviceFlags;
             public ScenarioControlFlags ControlFlags;
+            [TagField(Platform = CachePlatform.Original)]
             public short Unknown11;
+            [TagField(Platform = CachePlatform.Original)]
             public short Unknown12;
             [TagField(MinVersion = CacheVersion.HaloReach)]
             public ScenarioControlCharacterTypes AllowedPlayers;
@@ -1868,7 +1903,8 @@ namespace TagTool.Tags.Definitions
             }
         }
 
-        [TagStructure(Size = 0x30)]
+        [TagStructure(Size = 0x30, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x1C, Platform = CachePlatform.MCC)]
         public class SandboxObject : TagStructure
 		{
             public CachedTag Object;
@@ -1876,10 +1912,15 @@ namespace TagTool.Tags.Definitions
             public StringId Name;
             public int MaxAllowed;
             public float Cost;
+            [TagField(Platform = CachePlatform.Original)]
             public uint Unknown;
+            [TagField(Platform = CachePlatform.Original)]
             public uint Unknown2;
+            [TagField(Platform = CachePlatform.Original)]
             public uint Unknown3;
+            [TagField(Platform = CachePlatform.Original)]
             public uint Unknown4;
+            [TagField(Platform = CachePlatform.Original)]
             public uint Unknown5;
         }
 
@@ -3656,10 +3697,10 @@ namespace TagTool.Tags.Definitions
 
         [TagStructure(Size = 0x1C, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
         [TagStructure(Size = 0x20, MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
-        [TagStructure(Size = 0x20, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+        [TagStructure(Size = 0x1C, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
         public class CutsceneFlag : TagStructure
 		{
-            [TagField(Flags = Padding, Length = 4)]
+            [TagField(Flags = Padding, Length = 4, Platform = CachePlatform.Original)]
             public byte[] Unused;
             [TagField(Flags = Label)]
             public StringId Name;
@@ -3668,9 +3709,10 @@ namespace TagTool.Tags.Definitions
             [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
             public short EditorFolderIndex;
-            [TagField(MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
             [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
             public short SourceBspIndex;
+            [TagField(Length = 2, Flags = TagFieldFlags.Padding, Platform = CachePlatform.MCC)]
+            public byte[] Padding1;
         }
 
         public enum CutsceneCameraPointType : short
@@ -3703,14 +3745,15 @@ namespace TagTool.Tags.Definitions
             Bit15 = 1 << 15
         }
 
-        [TagStructure(Size = 0x40)]
+        [TagStructure(Size = 0x40, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x3C, Platform = CachePlatform.MCC)]
         public class CutsceneCameraPoint : TagStructure
 		{
             public CutsceneCameraPointFlags Flags;
             public CutsceneCameraPointType Type;
             [TagField(Flags = Label, Length = 32)]
             public string Name;
-            [TagField(Flags = Padding, Length = 4)]
+            [TagField(Flags = Padding, Length = 4, Platform = CachePlatform.Original)]
             public byte[] Unused;
             public RealPoint3d Position;
             public RealEulerAngles3d Orientation;
@@ -4426,7 +4469,8 @@ namespace TagTool.Tags.Definitions
             public byte[] Padding0;
         }
 
-        [TagStructure(Size = 0x6C, MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagStructure(Size = 0x6C, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x30, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.MCC)]
         [TagStructure(Size = 0x4, MinVersion = CacheVersion.HaloReach)]
         public class SpawnDatum : TagStructure
 		{
@@ -4435,7 +4479,7 @@ namespace TagTool.Tags.Definitions
 
             public float GameObjectResetHeight;
 
-            [TagField(Length = 0x3C, Flags = TagFieldFlags.Padding, MaxVersion = CacheVersion.HaloOnline700123)]
+            [TagField(Length = 0x3C, Flags = TagFieldFlags.Padding, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
             public byte[] Padding;
 
             [TagField(MaxVersion = CacheVersion.HaloOnline700123)]
@@ -4666,10 +4710,11 @@ namespace TagTool.Tags.Definitions
             public CachedTag Reference;
         }
 
-        [TagStructure(Size = 0x2C)]
+        [TagStructure(Size = 0x1C, Platform = CachePlatform.MCC)]
+        [TagStructure(Size = 0x2C, Platform = CachePlatform.Original)]
         public class ScreenEffectReference : TagStructure
         {
-            [TagField(Length = 0x10, Flags = Padding)]
+            [TagField(Length = 0x10, Flags = Padding, Platform = CachePlatform.Original)]
             public byte[] HLYWEJXGX;
             public CachedTag ScreenEffect;
             public StringId PrimaryInput; // interpolator
@@ -5459,22 +5504,27 @@ namespace TagTool.Tags.Definitions
             public CachedTag CinematicLight;
         }
 
-        [TagStructure(Size = 0x54, MaxVersion = CacheVersion.Halo3Retail)]
+        [TagStructure(Size = 0x54, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x5C, MaxVersion = CacheVersion.HaloReach, Platform = CachePlatform.MCC)]
         [TagStructure(Size = 0x6C, MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloReach)]
         public class PlayerRepresentationBlock : TagStructure
         {
+            [TagField(MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.MCC)]
             [TagField(MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123)]
             public StringId Name;
 
             [TagField(MinVersion = CacheVersion.HaloReach)]
             public ReachPlayerRepFlags Flags;
 
-            [TagField(MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.MCC)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
             public PlayerModelChoiceEnum ModelChoice;
-            [TagField(MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123)]
+            [TagField(MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.MCC)]
+            [TagField(MinVersion = CacheVersion.Halo3ODST, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
             public PlayerRepresentationClassEnum Class;
 
-            [TagField(Length = 0x2, Flags = Padding, MinVersion = CacheVersion.Halo3ODST)]
+            [TagField(Length = 0x2, Flags = Padding, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.MCC)]
+            [TagField(Length = 0x2, Flags = Padding, MinVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
             public byte[] pad;
 
             [TagField(MinVersion = CacheVersion.HaloReach)]

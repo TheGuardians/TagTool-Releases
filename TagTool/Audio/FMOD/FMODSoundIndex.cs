@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using TagTool.Cache;
+using TagTool.Commands.Common;
 using TagTool.IO;
 using TagTool.Serialization;
 using TagTool.Tags;
@@ -46,6 +47,11 @@ namespace TagTool.Audio
             while (!reader.EOF)
             {
                 var info = deserializer.Deserialize<FMODSoundInfo>(dataContext);
+                if(HashLookup.ContainsKey(info.Hash))
+                {
+                    index++;
+                    continue;
+                }
                 HashLookup.Add(info.Hash, index);
                 Sounds.Add(info);
                 index++;

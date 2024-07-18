@@ -6,6 +6,7 @@ using System.Threading;
 using TagTool.Audio.Converter;
 using TagTool.Cache;
 using TagTool.Commands;
+using TagTool.Commands.Common;
 using TagTool.Common;
 using TagTool.IO;
 using TagTool.Tags.Definitions;
@@ -204,10 +205,9 @@ namespace TagTool.Audio
                 if (cache.Platform == CachePlatform.MCC)
                 {
                     var gen3Cache = (GameCacheGen3)cache;
-                    if (!gen3Cache.FMODSoundCacheDirectory.Exists)
-                        throw new DirectoryNotFoundException($"FMOD sound banks directory not found \"{gen3Cache.FMODSoundCacheDirectory.FullName}\"");
-
                     blamSound = GetSoundBankData(cache, soundGestalt, gen3Cache.FMODSoundCache, sound, pitchRangeIndex, permutationIndex);
+                    if(blamSound == null)
+                        throw new Exception($"Failed to find sound {tagName} permutation {permutationIndex} in FMOD sound cache!");
                     var waveFile = new WAVFile(blamSound.Data, TagTool.Audio.Encoding.GetChannelCount(blamSound.Encoding), blamSound.SampleRate.GetSampleRateHz());
                     using (var output = new EndianWriter(File.Create(WAVFileName)))
                         waveFile.Write(output);
@@ -295,6 +295,8 @@ namespace TagTool.Audio
             int permutationGestaltIndex = soundGestalt.GetFirstPermutationIndex(pitchRangeGestaltIndex, cache.Platform) + permutationIndex;
             var permutation = soundGestalt.GetPermutation(permutationGestaltIndex);
             byte[] permutationData = fmodSoundCache.ExtractSound(permutation.FsbSoundHash);
+            if (permutationData == null)
+                return null;
             // TODO: update the rest of tagtool to handle pcm32
             permutationData = ConvertToPCM16(permutationData);
             var blamSound = new BlamSound(sound, permutationGestaltIndex, permutationData, cache.Version, soundGestalt);

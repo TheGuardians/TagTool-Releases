@@ -8,13 +8,14 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace TagTool.Tags.Definitions
 {
     [TagStructure(Name = "unit", Tag = "unit", Size = 0x130, MaxVersion = CacheVersion.Halo2Vista)]
-    [TagStructure(Name = "unit", Tag = "unit", Size = 0x214, MaxVersion = CacheVersion.Halo3Retail)]
-    [TagStructure(Name = "unit", Tag = "unit", Size = 0x224, MaxVersion = CacheVersion.Halo3ODST)]
+    [TagStructure(Name = "unit", Tag = "unit", Size = 0x214, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.Original)]
+    [TagStructure(Name = "unit", Tag = "unit", Size = 0x1C4, MaxVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
+    [TagStructure(Name = "unit", Tag = "unit", Size = 0x224, MaxVersion = CacheVersion.Halo3ODST, Platform = CachePlatform.Original)]
     [TagStructure(Name = "unit", Tag = "unit", Size = 0x2C8, MinVersion = CacheVersion.HaloOnlineED, MaxVersion = CacheVersion.HaloOnline700123)]
     [TagStructure(Name = "unit", Tag = "unit", Size = 0x3A0, MinVersion = CacheVersion.HaloReach)]
     public class Unit : GameObject
     {
-        public UnitFlagBits UnitFlags; // int
+        public UnitDefinitionFlags UnitFlags; // int
         public DefaultTeamValue DefaultTeam; // short
         public ConstantSoundVolumeValue ConstantSoundVolume; // short
 
@@ -27,10 +28,11 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public List<UnitScreenEffectBlock> ScreenEffects;
 
-        [TagField(ValidTags = new[] { "effe" }, MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagField(ValidTags = new[] { "effe" }, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
         public CachedTag IntegratedLightToggle;
         [TagField(MaxVersion = CacheVersion.HaloOnline700123)]
         public Angle CameraFieldOfView; // degrees
+        [TagField(Platform = CachePlatform.Original)]
         public float CameraStiffness;
         public UnitCameraBlock UnitCamera;
 
@@ -52,7 +54,9 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public float SoftDeathDirectionSpeedThreshold; // moving faster than this means you will soft death in the movement direction. zero defaults to damage direction. (wu/s)
         public float HardDeathThreshold; // [0,1]
+        [TagField(Platform = CachePlatform.Original)]
         public float FeignDeathThreshold; // [0,1]
+        [TagField(Platform = CachePlatform.Original)]
         public float FeignDeathTime;
 
         // The duration of the pain function. 0 defaults to 0.5
@@ -83,7 +87,7 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public float TerminalVelocityFallRatio;
 
-        [TagField(MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagField(MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
         public float StunnedMovementThreshold; // [0,1] if we take this much damage in a short space of time we will play our 'stunned movement' animations
         // 1.0 prevents moving while stunned
         [TagField(MinVersion = CacheVersion.HaloReach)]
@@ -101,13 +105,17 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public float MaximumStunTime; // seconds
 
+        [TagField(Platform = CachePlatform.Original)]
         public float FeignDeathChance; // [0,1]
+        [TagField(Platform = CachePlatform.Original)]
         public float FeignRepeatChance; // [0,1]
 
         [TagField(ValidTags = new[] { "char" })]
         public CachedTag SpawnedTurretCharacter; // automatically created character when this unit is driven
 
+        [TagField(Platform = CachePlatform.Original)]
         public Bounds<short> SpawnedActorCountBounds; // number of actors which we spawn
+        [TagField(Platform = CachePlatform.Original)]
         public float SpawnedVelocity; // velocity at which we throw spawned actors
 
         [TagField(MinVersion = CacheVersion.HaloReach)]
@@ -166,8 +174,10 @@ namespace TagTool.Tags.Definitions
         [TagField(MinVersion = CacheVersion.HaloReach)]
         public StringId GroundedEquipmentVariantName;
 
+        [TagField(Platform = CachePlatform.Original)]
         public List<Posture> Postures;
         public List<HudInterface> HudInterfaces;
+        [TagField(Platform = CachePlatform.Original)]
         public List<DialogueVariant> DialogueVariants;
 
         /// <summary>
@@ -211,7 +221,9 @@ namespace TagTool.Tags.Definitions
 
         public BoostBlock Boost;
 
+        [TagField(Platform = CachePlatform.Original)]
         public float LipsyncAttackWeight;
+        [TagField(Platform = CachePlatform.Original)]
         public float LipsyncDecayWeight;
 
         [TagField(ValidTags = new[] { "jpt!" }, MinVersion = CacheVersion.Halo3Retail)]
@@ -226,8 +238,45 @@ namespace TagTool.Tags.Definitions
             PegsThrottle = 1 << 0
         }
 
+        [TagStructure(Size = 0x4)]
+        public class UnitDefinitionFlags : VersionedFlags
+        {
+            [TagField(Platform = CachePlatform.Original)]
+            public UnitFlagBits Flags;
+
+            [TagField(Platform = CachePlatform.MCC)]
+            public UnitFlagBitsMCC FlagsMCC;
+        }
+
         [Flags]
-        public enum UnitFlagBits : int
+        public enum UnitFlagBitsMCC : uint
+        {
+            CircularAiming = 1 << 0,
+            DestroyedAfterDying = 1 << 1,
+            FiresFromCamera = 1 << 2,
+            DoesntShowReadiedWeapon = 1 << 3,
+            CausesPassengerDialogue = 1 << 4,
+            ResistsPings = 1 << 5,
+            MeleeAttackIsFatal = 1 << 6,
+            DontRefaceDuringPings = 1 << 7,
+            HasNoAiming = 1 << 8,
+            SimpleCreature = 1 << 9,
+            CannotOpenDoorsAutomatically = 1 << 10,
+            NotInstantlyKilledByMelee = 1 << 11,
+            FlashlightPowerDoesntTransferToWeapon = 1 << 12,
+            TopLevelForAOEDamage = 1 << 13,
+            SpecialCinematicUnit = 1 << 14,
+            IgnoredByAutoaiming = 1 << 15,
+            UseVelocityAsAcceleration = 1 << 16,
+            ActsAsGunnerForParent = 1 << 17,
+            ControlledByParentGunner = 1 << 18,
+            ParentsPrimaryWeapon = 1 << 19,
+            UnitHasBoost = 1 << 20,
+            AllowAimWhileOpeningOrClosing = 1 << 21
+        }
+
+        [Flags]
+        public enum UnitFlagBits : uint
         {
             CircularAiming = 1 << 0,
             DestroyedAfterDying = 1 << 1,
@@ -242,23 +291,23 @@ namespace TagTool.Tags.Definitions
             HasNoAiming = 1 << 10,
             SimpleCreature = 1 << 11,
             ImpactMeleeAttachesToUnit = 1 << 12,
-            ImpactMeleeDiesOnShield = 1 << 13,
+            ImpactMeleeDiesOnShields = 1 << 13,
             CannotOpenDoorsAutomatically = 1 << 14,
             MeleeAttackersCannotAttach = 1 << 15,
             NotInstantlyKilledByMelee = 1 << 16,
-            ShieldSapping = 1 << 17,
+            FlashlightPowerDoesntTransferToWeapon = 1 << 17,
             RunsAroundFlaming = 1 << 18,
-            Inconsequential = 1 << 19,
+            TopLevelForAoeDamage = 1 << 19,
             SpecialCinematicUnit = 1 << 20,
             IgnoredByAutoaiming = 1 << 21,
             ShieldsFryInfectionForms = 1 << 22,
-            CanDualWield = 1 << 23,
-            ActsAsGunnerForParent = 1 << 24,
-            ControlledByParentGunner = 1 << 25,
-            ParentsPrimaryWeapon = 1 << 26,
-            ParentsSecondaryWeapon = 1 << 27,
+            UseVelocityAsAcceleration = 1 << 23,
+            Unused1 = 1 << 24,
+            ActsAsGunnerForParent = 1 << 25,
+            ControlledByParentGunner = 1 << 26,
+            ParentsPrimaryWeapon = 1 << 27,
             UnitHasBoost = 1 << 28,
-            AllowAimWhileOpeningOrClosing = 1 << 29, // in MCC, needs testing
+            AllowAimWhileOpeningOrClosing = 1 << 29,
             UseAimStillXxForAirborne = 1 << 30
         }
 
@@ -409,9 +458,10 @@ namespace TagTool.Tags.Definitions
             UseAimingVectorInsteadOfMarkerForward = 1 << 3
         }
 
-        [TagStructure(Size = 0x1C, MaxVersion = CacheVersion.Halo2Vista)]
+        [TagStructure(Size = 0x1C, MaxVersion = CacheVersion.Halo2Vista, Platform = CachePlatform.Original)]
         [TagStructure(Size = 0x3C, MinVersion = CacheVersion.Halo3Retail, MaxVersion = CacheVersion.HaloOnline700123)]
-        [TagStructure(Size = 0x78, MinVersion = CacheVersion.HaloReach)]
+        [TagStructure(Size = 0x78, MinVersion = CacheVersion.HaloReach, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0x78, MinVersion = CacheVersion.HaloReach, Platform = CachePlatform.Original)]
         public class UnitCameraBlock : TagStructure
         {
             [TagField(MinVersion = CacheVersion.Halo3Retail)]
@@ -691,7 +741,8 @@ namespace TagTool.Tags.Definitions
         }
 
         [TagStructure(Size = 0xB0, MaxVersion = CacheVersion.Halo2Vista)]
-        [TagStructure(Size = 0xE4, MinVersion = CacheVersion.Halo3Retail, MaxVersion = CacheVersion.HaloOnline700123)]
+        [TagStructure(Size = 0xE4, MinVersion = CacheVersion.Halo3Retail, MaxVersion = CacheVersion.HaloOnline700123, Platform = CachePlatform.Original)]
+        [TagStructure(Size = 0xD4, MinVersion = CacheVersion.Halo3Retail, Platform = CachePlatform.MCC)]
         [TagStructure(Size = 0x13C, MinVersion = CacheVersion.HaloReach)]
         public class UnitSeat : TagStructure
 		{
@@ -737,6 +788,7 @@ namespace TagTool.Tags.Definitions
             public StringId EnterSeatString;
             public Angle YawMinimum;
             public Angle YawMaximum;
+            [TagField(Platform = CachePlatform.Original)]
             public CachedTag BuiltInGunner;
             public float EntryRadius; // how close to the entry marker a unit must be
             public Angle EntryMarkerConeAngle; // angle from marker forward the unit must be
